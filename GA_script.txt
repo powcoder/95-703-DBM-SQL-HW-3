@@ -1,0 +1,196 @@
+DROP TABLE Order_report PURGE;
+DROP TABLE Order_items  PURGE;
+DROP TABLE Inventory    PURGE;
+DROP TABLE Item         PURGE;
+DROP TABLE Orders       PURGE;
+DROP TABLE Customer     PURGE;
+DROP TABLE Rep          PURGE;
+DROP TABLE Warehouse    PURGE;
+DROP TABLE Producer     PURGE;
+
+
+CREATE TABLE rep
+(RepID      CHAR(2) CONSTRAINT rep_RepID_PK PRIMARY KEY,
+ FName      VARCHAR2(15),
+ LName      VARCHAR2(15),
+ Hire_Date  Date,
+ Street     VARCHAR2(15),
+ City       VARCHAR2(15),
+ State      CHAR(2),
+ Zip        CHAR(5),
+ Commission NUMBER(7,2),
+ Rate       NUMBER(3,2),
+ CONSTRAINT rep_Commission_CK CHECK (commission >= 0));
+
+
+CREATE TABLE customer
+(CusID         CHAR(3)  CONSTRAINT customer_CusID_PK   PRIMARY KEY,
+ Cus_Name      VARCHAR2(35) CONSTRAINT customer_CusName_NN NOT NULL,
+ Cus_Email     VARCHAR2(25),
+ Phone         VARCHAR2(12),
+ Street        VARCHAR2(15),
+ City          VARCHAR2(15),
+ State         CHAR(2) DEFAULT 'PA',
+ Zip           CHAR(5),
+ Balance       NUMBER(8,2) CONSTRAINT customer_Balance_NN  NOT NULL,
+ Credit_Limit  NUMBER(8,2) DEFAULT 2500  CONSTRAINT customer_CreditLimit_NN NOT NULL,
+ RepID         CHAR(2),
+ CONSTRAINT customer_RepID_FK FOREIGN KEY (RepID) REFERENCES rep(RepID),
+ CONSTRAINT customer_balance_CK      CHECK (balance >= 0),
+ CONSTRAINT customer_CreditLimit_CK  CHECK (credit_limit >= 0));
+
+
+CREATE TABLE orders
+(Order#     CHAR(5) CONSTRAINT orders_Order#_PK PRIMARY KEY,
+ Order_Date DATE,
+ Ship_Date  DATE,
+ Status     VARCHAR2(8) DEFAULT 'Open',
+ Pay_Method VARCHAR2(5) DEFAULT 'Card',
+ RepID      CHAR(2) CONSTRAINT orders_RepID_NN NOT NULL,
+ CusID      CHAR(3) CONSTRAINT orders_CusID_NN NOT NULL,
+ CONSTRAINT orders_repID_FK FOREIGN KEY (RepID) REFERENCES rep(RepID),
+ CONSTRAINT orders_cusID_FK FOREIGN KEY (CusID) REFERENCES customer(CusID));
+
+
+CREATE TABLE producer
+(P_Num    CHAR(4) CONSTRAINT producer_PNum_PK PRIMARY KEY,
+ Name     VARCHAR2(20),
+ Phone    VARCHAR2(12));
+
+
+CREATE TABLE item
+(Item#      CHAR(4) CONSTRAINT item_Item#_PK PRIMARY KEY,
+ Name       VARCHAR2(15),
+ Class      CHAR(2),
+ Price      NUMBER(6,2),
+ P_Num      CHAR(4),
+ CONSTRAINT Item_pnum_FK FOREIGN KEY (P_Num) REFERENCES producer(P_Num),
+ CONSTRAINT Item_Price_CK   CHECK (price > 0));
+
+
+CREATE TABLE order_items
+(Order#       CHAR(5),
+ Item#        CHAR(4),
+ Num_Ordered  NUMBER(3),
+ Quoted_Price NUMBER(6,2),
+ CONSTRAINT orderitems_order#_item#_PK PRIMARY KEY (Order#, Item#),
+ CONSTRAINT orderitems_Order#_FK FOREIGN KEY (Order#) REFERENCES orders(Order#),
+ CONSTRAINT orderitems_Item#_FK  FOREIGN KEY (Item#)  REFERENCES item(item#));
+
+
+CREATE TABLE warehouse
+(Warehouse#    CHAR(1),
+ Location      VARCHAR2(15),
+ Phone         VARCHAR2(12),
+ Mngr_Name     VARCHAR2(15),
+ Num_Employees NUMBER(4),
+ Area          NUMBER(7,1),
+ CONSTRAINT Warehouse_warehouse#_PK PRIMARY KEY (warehouse#));
+
+
+CREATE TABLE inventory
+(Warehouse#        CHAR(1),
+ Item#             CHAR(4),
+ On_Hand           NUMBER(4),
+ Min_Quantity      NUMBER(4),
+ Next_Supply_Date  DATE,
+ CONSTRAINT Inventory_Warehouse#_item#_PK  PRIMARY KEY (Warehouse#, Item#),
+ CONSTRAINT Inventory_min_quantity_CK      CHECK (Min_Quantity >= 0),
+ CONSTRAINT Inventory_On_Hand_CK    CHECK (On_Hand >= 0),
+ CONSTRAINT Inventory_Warehouse#_FK FOREIGN KEY (Warehouse#) REFERENCES warehouse(Warehouse#),
+ CONSTRAINT Inventory_Item#_FK      FOREIGN KEY (Item#)      REFERENCES item(Item#));
+
+
+INSERT INTO rep VALUES ('20', 'Valerie', 'Kaiser', '11-OCT-2016', '624 Randall','Lester','PA','15503', 20542.50, 0.05);
+INSERT INTO rep VALUES ('30', 'Richard', 'Hull', '10-JUN-2014', '532 Jackson','Franklin','PA','15321', 39216.00, 0.07);
+INSERT INTO rep VALUES ('40', 'Juan', 'Perez', '22-APR-2010', '1626 Taylor','Akron','PA','15146', 23487.00, 0.05);
+ 
+
+INSERT INTO customer VALUES 
+('148','Al''s Appliances', 'alsstore@net.com', '412-234-9845', '1828 Raven', 'Carnegie', 'PA','15236', 6550.00, 7500.00, '20');
+INSERT INTO customer VALUES
+('282','Brookings Direct', 'brook@bdirect.com', '412-111-2222', '28 Lakeview','Lester','PA','15503',431.50,10000.00,'30');
+INSERT INTO customer VALUES
+('356','Ferguson''s', 'fergie55@bymail.com', '412-345-9876', '282 Columbia','Northfield','PA','15106',5785.00,7500.00,'40');
+INSERT INTO customer VALUES
+('408','The Everything Shop', 'everything@myshop.com', '412-234-5678', '282 Evergreen','Franklin','PA','15321',5285.25, 5000.00, '30');
+INSERT INTO customer VALUES
+('462','Bargains Store', 'john@bargains.com', '412-100-2000', '2837 Greenway','Lester','PA','15503',3412.00,10000.00,'40');
+INSERT INTO customer VALUES
+('524','Kline''s', 'klines@klines.com', '412-123-4567', '372 Oxford','Carnegie','PA','15236',12762.00,15000.00,'20');
+INSERT INTO customer VALUES
+('608','Johnson''s Department Store', 'chris2@jdstore.com', '412-234-1234', '382 Wildwood','Akron','PA','15146',2106.00, 10000.00, '40');
+INSERT INTO customer VALUES
+('687','Lee''s Sport', 'lee@sport.com', '412-222-1145', '3827 Devon','Franklin','PA','15321',2851.00, 5000.00, '30');
+INSERT INTO customer VALUES
+('725','Deerfield''s Four Seasons', 'deerfield@fourseasons.com', '412-333-9898', '3829 Central','Akron','PA','15146',248.00, 7500.00, '30');
+INSERT INTO customer VALUES
+('842','All Season','mary@allseasons.com', '412-121-9889', '38 Lakeview','Lester','PA','15533',8221.00,7500.00,'20');
+
+
+
+INSERT INTO orders VALUES ('21608','4-FEB-2020','4-FEB-2020','Closed',  'Card', '20','148');
+INSERT INTO orders VALUES ('21610','4-FEB-2020','5-FEB-2020','Closed',   'EFT', '40','356');
+INSERT INTO orders VALUES ('21613','5-FEB-2020','5-FEB-2020','Closed',  'Check','30','408');
+INSERT INTO orders VALUES ('21614','5-FEB-2020','7-FEB-2020','Closed',  'Card', '20','282');
+INSERT INTO orders VALUES ('21617','6-FEB-2020','7-FEB-2020','Returned','Card', '40','608');
+INSERT INTO orders VALUES ('21619','6-FEB-2020','7-FEB-2020','Closed',  'Card', '20','148');
+INSERT INTO orders VALUES ('21623','6-FEB-2020', NULL,'Open','Card','40','608');
+
+INSERT INTO producer VALUES ('S100','Work Bench Etc.','703-234-9845');
+INSERT INTO producer VALUES ('A100','Tesko Inc.',     '402-234-9845'); 
+INSERT INTO producer VALUES ('H100','Variety Goods',  '206-234-9845');
+
+
+INSERT INTO item VALUES ('AT94','Iron',          'HW',  24.95,'H100');
+INSERT INTO item VALUES ('BV06','Home Gym',      'SG', 794.95,'S100');
+INSERT INTO item VALUES ('CD52','Microwave Oven','AP', 165.00,'A100');
+INSERT INTO item VALUES ('DL71','Cordless Drill','HW', 129.95,'H100');
+INSERT INTO item VALUES ('DR93','Gas Range',     'AP', 495.00,'A100');
+INSERT INTO item VALUES ('DW11','Washer',        'AP', 399.95,'A100');
+INSERT INTO item VALUES ('FD21','Stand Mixer',   'HW', 159.95,'H100');
+INSERT INTO item VALUES ('KL62','Dryer',         'AP', 349.95,'A100');
+INSERT INTO item VALUES ('KT03','Dishwasher',    'AP', 595.00,'A100');
+INSERT INTO item VALUES ('KV29','Treadmill',     'SG',1390.00,'S100');
+
+INSERT INTO order_items VALUES ('21608','AT94',11,  22.50);
+INSERT INTO order_items VALUES ('21608','DL71', 5, 117.00);
+INSERT INTO order_items VALUES ('21608','CD52', 5, 148.50);
+INSERT INTO order_items VALUES ('21610','DR93', 2, 495.00);
+INSERT INTO order_items VALUES ('21610','DW11', 2, 399.95);
+INSERT INTO order_items VALUES ('21613','DW11', 4, 375.95);
+INSERT INTO order_items VALUES ('21613','KL62', 4, 329.95);
+INSERT INTO order_items VALUES ('21614','KT03', 2, 595.00);
+INSERT INTO order_items VALUES ('21617','BV06', 2, 794.95);
+INSERT INTO order_items VALUES ('21617','CD52', 4, 150.00);
+INSERT INTO order_items VALUES ('21619','AT94', 5,  24.95);
+INSERT INTO order_items VALUES ('21619','DR93', 1, 495.00);
+INSERT INTO order_items VALUES ('21623','KV29', 2,1290.00);
+
+INSERT INTO warehouse VALUES ('1', 'Tampa',   '412-111-2332', 'Joe Martin', 10, 8500);
+INSERT INTO warehouse VALUES ('2', 'Oakland', '412-345-6789', 'Mary Smith',  7, 5000);
+INSERT INTO warehouse VALUES ('3', 'Akron',   '412-456-9876', 'David Lee',   8, 6000);
+
+
+INSERT INTO inventory VALUES ('1','CD52', 162, 60, '22-APR-2020');
+INSERT INTO inventory VALUES ('1','DR93',  53, 30, '22-APR-2020');
+INSERT INTO inventory VALUES ('1','KL62',  83, 30, '22-APR-2020');
+INSERT INTO inventory VALUES ('1','KV29',  11,  5, '22-APR-2020');
+
+INSERT INTO inventory VALUES ('2','AT94', 152, 65, '24-APR-2020');
+INSERT INTO inventory VALUES ('2','BV06',  45, 30, '24-APR-2020');
+INSERT INTO inventory VALUES ('2','DR93',  28, 20, '24-APR-2020');
+INSERT INTO inventory VALUES ('2','KT03',  23, 10, '24-APR-2020');
+
+INSERT INTO inventory VALUES ('3','AT94', 198, 65, '27-APR-2020');
+INSERT INTO inventory VALUES ('3','DL71', 321, 75, '27-APR-2020');
+INSERT INTO inventory VALUES ('3','DW11',  62, 30, '27-APR-2020');
+INSERT INTO inventory VALUES ('3','FD21', 154, 75, '27-APR-2020');
+INSERT INTO inventory VALUES ('3','KT03',  18, 10, '27-APR-2020');
+
+COMMIT;
+
+
+
+
+
